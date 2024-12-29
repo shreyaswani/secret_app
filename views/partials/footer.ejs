@@ -1,0 +1,32 @@
+<script>
+    function getQueryParam(param) {
+      const urlParams = new URLSearchParams(window.location.search);
+      return urlParams.get(param);
+    }
+
+    const successMessage = getQueryParam('success');
+    if (successMessage) {
+      Toastify({
+        text: successMessage,
+        duration: 3000,
+        gravity: "top", 
+        position: "right",
+        backgroundColor: "#28a745", 
+      }).showToast();
+    }
+  
+    const errorMessage = getQueryParam('error');
+    if (errorMessage) {
+      Toastify({
+        text: errorMessage,
+        duration: 3000,
+        gravity: "top", 
+        position: "right",
+        backgroundColor: "#dc3545",
+      }).showToast();
+    }
+  </script>
+  
+
+</body>
+</html>
