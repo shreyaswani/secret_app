@@ -1,4 +1,30 @@
 <script>
+
+async function deleteItem(secretId) {
+    const listItem = document.getElementById(`item-${secretId}`);
+    if (confirm("Are you sure you want to delete this secret?")) {
+      try {
+        const response = await fetch('/secret/delete', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ secretId }),
+        });
+
+        if (response.ok) {
+            if (listItem) {
+                    listItem.remove();
+                }
+        } else {
+        }
+      } catch (error) {
+        console.error("Error:", error);
+      }
+    }
+  }
+
+
     function getQueryParam(param) {
       const urlParams = new URLSearchParams(window.location.search);
       return urlParams.get(param);

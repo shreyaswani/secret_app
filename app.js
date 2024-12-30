@@ -15,6 +15,8 @@ app.set('views', path.join(__dirname, 'views'));
 app.set("view engine", "ejs");
 app.use(bodyParser.urlencoded({ extended: true }));
 
+app.use(bodyParser.json()); 
+
 const firebaseConfig = {
     apiKey: process.env.FIREBASE_API_KEY,
     authDomain: process.env.FIREBASE_AUTH_DOMAIN,
@@ -31,11 +33,20 @@ const db = firebase.database();
 const auth = firebase.auth();
 
 function checkAuth(req, res, next) {
-    const user = auth.currentUser;
+    const user = firebase.auth().currentUser;
     if (user) {
       next();
     } else {
-      res.redirect("/login");
+      res.redirect("/login?error=User already exist.");
+    }
+  }
+
+  function redirectIfAuthenticated(req, res, next) {
+    const user = firebase.auth().currentUser;
+    if (user) {
+      res.redirect("/secret?success=You are already logged in.");
+    } else {
+      next();
     }
   }
 
@@ -43,13 +54,17 @@ app.get("/", function (req, res) {
   res.render("home");
 });
 
-app.get("/login", function (req, res) {
-  res.render("login");
-});
+app.get("/login", redirectIfAuthenticated, (req, res) => {
+    const error = "Error while Logging In" || null;
+    res.render("login", { error });
+  });
+  
 
-app.get("/register", function (req, res) {
-  res.render("register");
-});
+app.get("/register", redirectIfAuthenticated, (req, res) => {
+    const error = "Error while Registering" || null;
+    const success = "Already Registered" || null;
+    res.render("register", { error, success });
+  });
 
 app.post("/register", async (req, res) => {
     const { email, password } = req.body;
@@ -57,7 +72,7 @@ app.post("/register", async (req, res) => {
       await firebase.auth().createUserWithEmailAndPassword(email, password);
       res.redirect("/secret?success=Registration successful.");
     } catch (error) {
-      res.redirect(`/register?error=${encodeURIComponent(error.message)}`);
+      res.redirect(`/register?error="Error while creating user`);
     }
   });
 
@@ -72,16 +87,27 @@ app.post("/register", async (req, res) => {
   });
 
   app.get("/secret", checkAuth, async (req, res) => {
+    const user = firebase.auth().currentUser;
+  
+    if (!user) {
+      res.redirect("/login");
+      return;
+    }
+  
     try {
-      const secretsSnapshot = await db.ref("secrets").once("value");
+      const secretsSnapshot = await db.ref(`secrets/${user.uid}`).once("value");
       const secretsData = secretsSnapshot.val();
   
       const secrets = secretsData
-        ? Object.values(secretsData).map((secretObj) => secretObj.secret)
+        ? Object.keys(secretsData).map((secretId) => ({
+            secretId,
+            secret: secretsData[secretId].secret,
+          }))
         : [];
+  
       res.render("secrets", { secrets });
     } catch (err) {
-      res.status(500).send("error-An error occurred while fetching secrets.");
+      res.status(500).send("An error occurred while fetching secrets.");
     }
   });
   
@@ -91,10 +117,11 @@ app.post("/register", async (req, res) => {
 
 app.post("/submit", async (req, res) => {
   const { secret } = req.body;
+  const user = firebase.auth().currentUser;
 
-  if (secret && secret.trim() !== "") {
+  if (user && secret && secret.trim() !== "") {
     try {
-      await db.ref("secrets").push({ secret, createdAt: new Date().toISOString() });
+      await db.ref(`secrets/${user.uid}`).push({ secret, createdAt: new Date().toISOString()});
       res.redirect("/secret");
     } catch (err) {
       res.status(500).send("error=An error occurred while saving your secret.");
@@ -108,13 +135,30 @@ app.get("/logout", async (req, res) => {
       await firebase.auth().signOut();
       res.redirect("/login?success=Logged out successfully.");
     } catch (error) {
-      res.redirect(`/secret?error=An error occured.}`);
+      res.redirect(`/secret?error=An error occurred.}`);
     }
   });
 
 app.get("/submit", function (req, res) {
   res.render("submit");
 });
+
+app.post("/secret/delete", checkAuth, async (req, res) => {
+    const user = firebase.auth().currentUser;
+    const { secretId } = req.body;
+  
+    if (user && secretId) {
+      try {
+        await db.ref(`secrets/${user.uid}/${secretId}`).remove();
+        res.status(200).send("Secret deleted successfully.");
+      } catch (err) {
+        console.error("Error deleting secret:", err);
+        res.status(500).send("An error occurred while deleting the secret.");
+      }
+    } else {
+      res.status(400).send("Invalid request or unauthorized action.");
+    }
+  });
 
 app.listen(3000, function () {
   console.log("Server is running on port no. 3000");

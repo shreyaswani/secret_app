@@ -1,5 +1,8 @@
 <%- include('partials/header') %>
-<div class="container mt-5" style="display: flex; flex-direction: column; align-items: center; justify-content: center; width: 100%;" >
+<a href="/" class="home-button">
+  <i class="fas fa-arrow-left"></i>
+</a>
+<div class="container loginsize mt-5" style="display: flex; flex-direction: column; align-items: center; justify-content: center; width: 100%;" >
 
   <h1>Register</h1>
 
@@ -17,6 +20,8 @@
               <input type="password" class="form-control" placeholder="Password" name="password" required>
             </div>
             <button type="submit" class="btn btn-dark">Register</button>
+            <Span style="margin:0 10px;"> Or </Span>
+            <a href="/login" style="color: black; font-weight: 700; text-decoration: underline;">Login</a>
           </form>
         </div>
       </div>
