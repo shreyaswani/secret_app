@@ -163,3 +163,15 @@ app.post("/secret/delete", checkAuth, async (req, res) => {
 app.listen(3000, function () {
   console.log("Server is running on port no. 3000");
 });
+
+
+
+// FIREBASE_API_KEY="AIzaSyDC7x1QS2dGjT1uyNdQHScaGtMjh73_w5w"
+// FIREBASE_AUTH_DOMAIN="secretapp-24373.firebaseapp.com"
+// FIREBASE_PROJECT_ID="secretapp-24373"
+// FIREBASE_STORAGE_BUCKET="secretapp-24373.appspot.com"
+// FIREBASE_MESSAGING_SENDER_ID="639277096613"
+// FIREBASE_APP_ID="1:639277096613:web:9613aa0ec1ca77e90cf74c"
+// FIREBASE_DATABASE_URL="https://secretapp-24373-default-rtdb.firebaseio.com"
+// FIREBASE_MEASUREMENT_URL="G-3496MWSNDJ"
+
